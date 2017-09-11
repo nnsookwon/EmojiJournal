@@ -15,6 +15,7 @@ import {
   MenuOptions,
   MenuOption,
   MenuTrigger,
+  renderers
 } from 'react-native-popup-menu';
 import IconFa from 'react-native-vector-icons/FontAwesome';
 import IconEntypo from 'react-native-vector-icons/Entypo';
@@ -38,19 +39,19 @@ class JournalEntry extends Component{
 		)
 
 		return (
-			<Menu>
+			<Menu renderer={renderers.NotAnimatedContextMenu}>
 		      <MenuTrigger>
 		      	{ triggerComponent }
 			  </MenuTrigger>
 
 		      <MenuOptions>
-		        <MenuOption onSelect={() => alert('Edit')}>
+		        <MenuOption onSelect={()=> alert("edit")}>
 		        	<View style={styles.icon_text}>
 						<IconFa name="pencil" size={24} />
 						<Text style={{fontSize:20}}>  Edit</Text>
 					</View>
 				</MenuOption>
-		        <MenuOption onSelect={() => alert('Delete')} >
+		        <MenuOption onSelect={this.props.removeEntryById} >
 		          <View style={styles.icon_text}>
 					<IconFa name="trash-o" size={24} />
 					<Text style={{fontSize:20}}>  Delete</Text>
@@ -122,7 +123,7 @@ const styles = StyleSheet.create({
 		color: 'white',
 	},
 	menu_trigger: {
-		width: 30,
+		width: 40,
 		alignSelf: 'flex-end',
 		alignItems: 'center', 
 	},

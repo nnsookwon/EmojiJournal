@@ -9,6 +9,7 @@ class SQLiteDB {
 		this.close = this.close.bind(this);
 		this.addEntry = this.addEntry.bind(this);
 		this.getMostRecentEntries = this.getMostRecentEntries.bind(this);
+		this.removeEntryById = this.removeEntryById.bind(this);
 	}
 
 	open() {
@@ -83,6 +84,17 @@ class SQLiteDB {
 				throw new Error(error);
 			})
 
+	}
+
+	removeEntryById(entry_id) {
+		return this.db.transaction( tx => {
+				const query = "DELETE FROM JournalTable WHERE entry_id = ?";
+				tx.executeSql(query, [entry_id])
+			})
+			.catch( error => {
+				console.log("DB delete row ERROR: " + error.message);
+				throw new Error(error);
+			})
 	}
 
 

@@ -29,6 +29,8 @@ class Home extends Component {
 		this.db = new db();
 
 		this.addEntry = this.addEntry.bind(this);
+		this.refreshEntries = this.refreshEntries.bind(this);
+		this.removeEntryById = this.removeEntryById.bind(this);
 		this.isEmoji = this.isEmoji.bind(this);
 		this.renderAddEntryModal = this.renderAddEntryModal.bind(this);
 
@@ -36,8 +38,7 @@ class Home extends Component {
 
 	componentDidMount() {
 		this.db.open()
-			.then( () => this.db.getMostRecentEntries(10) )
-		  	.then( mostRecentEntries => this.setState({ mostRecentEntries }) )
+			.then(this.refreshEntries)
 	}
 
 	componentWillUnmount() {
@@ -45,11 +46,20 @@ class Home extends Component {
 		  	.then( () => this.db = null )	
 	}
 
+	refreshEntries() {
+		return this.db.getMostRecentEntries(10)
+			.then( mostRecentEntries => this.setState({ mostRecentEntries }) )	
+	}	
+
 	addEntry() {
 		this.db.addEntry(new Date().toISOString(), this.state.emoji, this.state.description)
-			.then( () => this.db.getMostRecentEntries(10) )
-			.then( mostRecentEntries => this.setState({ mostRecentEntries }) )
+			.then(this.refreshEntries)
 			.then( () => this.setState({modalVisible: false}))
+	}
+
+	removeEntryById(entry_id) {
+		this.db.removeEntryById(entry_id)
+			.then(this.refreshEntries);
 	}
 
 	isEmoji(emoji) {
@@ -93,7 +103,8 @@ class Home extends Component {
 				{
 					this.state.mostRecentEntries.map( (entry, i) => {
 						return (
-							<JournalEntry {...entry} key={i}/>
+							<JournalEntry {...entry} key={i}
+								removeEntryById={this.removeEntryById.bind(this,entry.entry_id)}/>
 						)
 					})
 				}
