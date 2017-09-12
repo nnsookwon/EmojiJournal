@@ -23,11 +23,33 @@ import CustomModal from './CustomModal';
 
 class JournalEntry extends Component{
 	constructor(props) {
-	  super(props);
-	
-	  this.state = { };
+		super(props);
 
-	  this.renderMenuOptions = this.renderMenuOptions.bind(this);
+		this.state = { 
+			modalVisible: false,
+			emoji: this.props.emoji,
+			description: this.props.description
+		};
+
+		this._updateEntry = this._updateEntry.bind(this);
+		this.renderMenuOptions = this.renderMenuOptions.bind(this);
+		this.renderEditEntryModal = this.renderEditEntryModal.bind(this);
+	}
+
+	componentWillReceiveProps(newProps) {
+		// If props are updated, reset default input values
+		this.setState({
+			emoji: newProps.emoji,
+			description: newProps.description
+		});
+	}
+
+	_updateEntry() {
+		this.props.updateEntry(this.props.entry_id,
+			this.props.timestamp,
+			this.state.emoji,
+			this.state.description)
+			.then(() => this.setState({modalVisible: false}))
 	}
 
 	renderMenuOptions() {
@@ -45,7 +67,7 @@ class JournalEntry extends Component{
 			  </MenuTrigger>
 
 		      <MenuOptions>
-		        <MenuOption onSelect={()=> alert("edit")}>
+		        <MenuOption onSelect={() => this.setState({modalVisible: true})}>
 		        	<View style={styles.icon_text}>
 						<IconFa name="pencil" size={24} />
 						<Text style={{fontSize:20}}>  Edit</Text>
@@ -62,9 +84,36 @@ class JournalEntry extends Component{
 		)
 	}
 
+	renderEditEntryModal() {
+		return (
+			<View>
+				<TextInput onChangeText={(emoji) => this.setState({emoji: encodeURI(emoji, "utf-8")})}
+					value={decodeURI(this.state.emoji, "utf-8")}
+					placeholder="emoji"
+					maxLength={2}
+					style={{fontSize:18}}>
+		        </TextInput>
+		        <TextInput onChangeText={(description) => this.setState({description})}
+		        	value={this.state.description}
+					placeholder="add notes"
+					autoCapitalize="sentences"
+					multiline={true}
+					numberOfLines={2}
+					style={{fontSize:18}}>
+		        </TextInput>
+		        <Button
+					onPress={this._updateEntry}
+					title="Done"
+					color="#841584"/>
+			</View>
+		)
+	}
+
+
 	render() {
 		const datetime = new Date(this.props.timestamp);
 		const menuOptions = this.renderMenuOptions();
+		const modalContent = this.renderEditEntryModal();
 
 		return (
 			<View style={styles.container}>
@@ -73,12 +122,11 @@ class JournalEntry extends Component{
 					<Text style={styles.header_text}>
 						{ datetime.toDateString() }
 					</Text>
-
 					
 					{ menuOptions }
 					
 				</View>
-				<TouchableHighlight onLongPress={()=>this.setState({modalVisible:true})}>
+				<TouchableHighlight onLongPress={() => console.log("press long")}>
 					<View style={styles.content}>
 			            <Text style={styles.emoji}>
 		              		{ decodeURI(this.props.emoji, "utf-8") }
@@ -94,6 +142,11 @@ class JournalEntry extends Component{
 		         		</View>
 	         		</View>
          		</TouchableHighlight>
+
+         		{/* Display modal to edit entry information */}
+         		<CustomModal modalVisible={this.state.modalVisible}
+         			onRequestClose={()=>this.setState({modalVisible:false, emoji: this.props.emoji, description: this.props.description})}
+					content={modalContent}/>
 
          		
           	</View>
