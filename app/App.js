@@ -18,6 +18,9 @@ import {
 import { MenuContext } from 'react-native-popup-menu';
 import MenuBar from './components/MenuBar';
 import Home from './views/Home';
+import Summary from './views/Summary';
+
+import db from './db/SQLiteDB.android';
 
 
 class App extends Component {
@@ -27,16 +30,21 @@ class App extends Component {
         this.state = {
             selectedPageView: 0
         };
-
-        this._onPageScroll = this._onPageScroll.bind(this);
+        this._onPageSelected = this._onPageSelected.bind(this);
+        this._setPage = this._setPage.bind(this);
+    }
+    _onPageSelected(event) {
+        const { position } = event.nativeEvent;
+        this.setState({selectedPageView: position})
     }
 
-    _onPageScroll(event) {
-        const { position, offset } = event.nativeEvent;
-        // Position indicates left pageview.
-        // If offset greater than half, more of the right pageview is visible.
-        const index = offset > 0.5 ? position + 1 : position;
-        this.setState({selectedPageView: index})
+    _setPage(index) {
+        this.viewPager.setPage(index);
+        this.setState({selectedPageView: index});
+    }
+
+    componentWillUnmount() {
+        db.close();
     }
 
     render() {
@@ -45,18 +53,20 @@ class App extends Component {
                 <ViewPagerAndroid
                     initialPage={this.state.selectedPageView}
                     style={styles.pager}
-                    onPageScroll = {this._onPageScroll}>
+                    onPageSelected = {this._onPageSelected}
+                    ref={ viewPager => this.viewPager = viewPager }>
                     <View style={styles.pageview}>
                         <Home/>
                     </View>
                     <View style={styles.pageview}>
-                        <Text>Second page</Text>
+                        <Summary />
                     </View>
                     <View style={styles.pageview}>
                         <Text>third page</Text>
                     </View>
                 </ViewPagerAndroid>
-                <MenuBar index={this.state.selectedPageView}/>
+                <MenuBar index={this.state.selectedPageView}
+                    setPage={this._setPage}/>
             </View>
         )
     }

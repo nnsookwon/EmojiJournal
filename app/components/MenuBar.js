@@ -7,7 +7,7 @@ import {
     TextInput,
     Button,
     Alert,
-    Modal
+    TouchableHighlight
 } from 'react-native';
 
 const pages = [ 'Entries', 'Summary', 'Settings' ]
@@ -21,7 +21,11 @@ class MenuBar extends Component {
                 pages.map( (page, i) => {
                     const style = i === this.props.index ? {fontSize:24} : {fontSize: 18};
                     return (
-                        <Text key={i} style={ style }>{page}</Text>
+                        <TouchableHighlight key={i} 
+                            onPress={()=>this.props.setPage(i)}
+                            underlayColor="white">
+                            <Text style={ style }>{page}</Text>
+                        </TouchableHighlight>
                     )
                 })
             }
