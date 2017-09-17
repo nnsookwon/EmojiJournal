@@ -7,7 +7,8 @@ import {
     TextInput,
     Button, 
     ScrollView,
-    Picker
+    Picker,
+    RefreshControl
 } from 'react-native';
 
 import db from '../db/SQLiteDB.android';
@@ -17,12 +18,14 @@ class Summary extends Component {
         super(props);
 
         this.state = {
+            refreshing: false,
             topEmojis: [],
             topEmojisDays: 7
         };
 
         this.refreshData = this.refreshData.bind(this);
         this.onDaysSelect = this.onDaysSelect.bind(this);
+        this._onRefresh = this._onRefresh.bind(this);
         this.renderTopEmojis = this.renderTopEmojis.bind(this);
     }
 
@@ -31,7 +34,7 @@ class Summary extends Component {
     }
 
     refreshData(nDays) {
-        db.getTopEmojis(10,nDays)
+        return db.getTopEmojis(10,nDays)
             .then( results => this.setState({ topEmojis: results }) )
     }
 
@@ -40,6 +43,13 @@ class Summary extends Component {
             this.refreshData(this.state.topEmojisDays)
         })
     } 
+
+    _onRefresh() {
+        this.setState({refreshing: true});
+        this.refreshData(this.state.topEmojisDays).then(() => {
+            this.setState({refreshing: false});
+        });
+  }
 
     renderTopEmojis() {
         const emojiRow = (emoji, count, key) => {
@@ -82,10 +92,16 @@ class Summary extends Component {
     }
 
     render() {
-      const topEmojis = this.renderTopEmojis();
+        const topEmojis = this.renderTopEmojis();
+        const refreshControl = (
+            <RefreshControl
+                refreshing={this.state.refreshing}
+                onRefresh={this._onRefresh} />
+        )
         return (
             <ScrollView style={styles.container}
-                showsVerticalScrollIndicator={false}>
+                showsVerticalScrollIndicator={false}
+                refreshControl={refreshControl}>
                 <View style={styles.top_emojis_header}>
                     <Text style={styles.section_header}>Top Emojis:</Text>
                     <Picker style={{width:140}}
