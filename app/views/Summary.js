@@ -6,7 +6,8 @@ import {
     View,
     TextInput,
     Button, 
-    ScrollView
+    ScrollView,
+    Picker
 } from 'react-native';
 
 import db from '../db/SQLiteDB.android';
@@ -16,21 +17,29 @@ class Summary extends Component {
         super(props);
 
         this.state = {
-            topEmojis: []
+            topEmojis: [],
+            topEmojisDays: 7
         };
 
         this.refreshData = this.refreshData.bind(this);
+        this.onDaysSelect = this.onDaysSelect.bind(this);
         this.renderTopEmojis = this.renderTopEmojis.bind(this);
     }
 
     componentDidMount() {
-        db.open().then(this.refreshData);
+        db.open().then(this.refreshData.bind(this, 7));
     }
 
-    refreshData() {
-        db.getTopEmojis(10,10)
+    refreshData(nDays) {
+        db.getTopEmojis(10,nDays)
             .then( results => this.setState({ topEmojis: results }) )
     }
+
+    onDaysSelect(itemValue) {
+        this.setState({topEmojisDays: itemValue}, ()=> {
+            this.refreshData(this.state.topEmojisDays)
+        })
+    } 
 
     renderTopEmojis() {
         const emojiRow = (emoji, count, key) => {
@@ -75,10 +84,21 @@ class Summary extends Component {
     render() {
       const topEmojis = this.renderTopEmojis();
         return (
-            <View style={styles.container}>
-                <Text style={styles.section_header}>Top Emojis:</Text>
+            <ScrollView style={styles.container}
+                showsVerticalScrollIndicator={false}>
+                <View style={styles.top_emojis_header}>
+                    <Text style={styles.section_header}>Top Emojis:</Text>
+                    <Picker style={{width:140}}
+                        selectedValue={this.state.topEmojisDays}
+                        onValueChange={this.onDaysSelect}>
+                        <Picker.Item label="Last 3 days" value={3} />
+                        <Picker.Item label="Last 7 days" value={7} />
+                        <Picker.Item label="Last 14 days" value={14} />
+                        <Picker.Item label="Last 30 days" value={30} />
+                    </Picker>
+                </View>
                 { topEmojis }
-            </View>
+            </ScrollView>
         );
     }
 }
@@ -90,6 +110,11 @@ const styles = StyleSheet.create({
     section_header: {
         fontSize: 24,
         fontWeight: 'bold'
+    },
+    top_emojis_header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center'
     },
     top_emojis: {
         flexDirection: 'row',

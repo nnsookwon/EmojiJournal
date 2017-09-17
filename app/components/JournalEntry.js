@@ -17,6 +17,7 @@ import {
     MenuTrigger,
     renderers
 } from 'react-native-popup-menu';
+import Moment from 'moment';
 import IconFa from 'react-native-vector-icons/FontAwesome';
 import IconEntypo from 'react-native-vector-icons/Entypo';
 import CustomModal from './CustomModal';
@@ -111,7 +112,10 @@ class JournalEntry extends Component{
 
 
     render() {
-        const datetime = new Date(this.props.timestamp);
+
+        Moment.locale('en');
+        const dateString = Moment(this.props.timestamp).format("ddd MMM D, YYYY");
+        const timeString = Moment(this.props.timestamp).format("h:mm a");
         const menuOptions = this.renderMenuOptions();
         const modalContent = this.renderEditEntryModal();
 
@@ -120,7 +124,7 @@ class JournalEntry extends Component{
 
                 <View style={styles.header}>
                     <Text style={styles.header_text}>
-                        { datetime.toDateString() }
+                        { dateString }
                     </Text>
                     
                     { menuOptions }
@@ -133,7 +137,7 @@ class JournalEntry extends Component{
                         </Text>
                         <View style={styles.info}>
                             <Text style={styles.timestamp}>
-                                { datetime.toLocaleTimeString() } 
+                                { timeString } 
                             </Text>
                             <Text style={styles.description}
                                 numberOfLines={4}>
@@ -177,7 +181,6 @@ const styles = StyleSheet.create({
     },
     menu_trigger: {
         width: 40,
-        alignSelf: 'flex-end',
         alignItems: 'center', 
     },
     icon_text: {
