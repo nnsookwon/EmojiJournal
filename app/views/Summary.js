@@ -13,34 +13,60 @@ import {
 
 import db from '../db/SQLiteDB.android';
 
+const daysOfWeek = [ "Sun", "Mon", "Tue", "Wed", "Thurs", "Fri", "Sat"];
+
 class Summary extends Component {
     constructor(props) {
         super(props);
 
         this.state = {
             refreshing: false,
-            topEmojis: [],
-            topEmojisDays: 7
+            topOverallEmojis: [],
+            topDailyEmojis: [],
+            topOverallDays: 7,
+            topDailyDays: 7
         };
 
         this.refreshData = this.refreshData.bind(this);
+        this.refreshOverall = this.refreshOverall.bind(this);
+        this.refreshDaily = this.refreshDaily.bind(this);
         this.onDaysSelect = this.onDaysSelect.bind(this);
         this._onRefresh = this._onRefresh.bind(this);
-        this.renderTopEmojis = this.renderTopEmojis.bind(this);
+        this.renderTopOverallEmojis = this.renderTopOverallEmojis.bind(this);
     }
 
     componentDidMount() {
-        db.open().then(this.refreshData.bind(this, 7));
+        db.open().then(this.refreshData)
     }
 
-    refreshData(nDays) {
-        return db.getTopEmojis(10,nDays)
-            .then( results => this.setState({ topEmojis: results }) )
+    refreshData() {
+        return this.refreshOverall().then(this.refreshDaily);
     }
 
-    onDaysSelect(itemValue) {
-        this.setState({topEmojisDays: itemValue}, ()=> {
-            this.refreshData(this.state.topEmojisDays)
+    refreshOverall() {
+        return db.getTopEmojisOverall(10, this.state.topOverallDays)
+            .then( results => this.setState({ topOverallEmojis: results }) )
+    }
+
+    async refreshDaily(nDays) {
+        const results = [];
+        for (let i = 0; i < 7; i++) {
+            const result = await db.getTopEmojisDaily(i, 1, this.state.topDailyDays);
+            results.push(result);
+        }
+        this.setState({ topDailyEmojis: results}, ()=>console.log(this.state));
+    }
+
+    onDaysSelect(name, value) {
+        this.setState({ [name] : value }, ()=> {
+            switch (name) {
+                case "topOverallDays":
+                    this.refreshOverall();
+                    break;
+                case "topDailyDays":
+                    this.refreshDaily();
+                    break;
+            }
         })
     } 
 
@@ -51,11 +77,11 @@ class Summary extends Component {
         });
   }
 
-    renderTopEmojis() {
+    renderTopOverallEmojis() {
         const emojiRow = (emoji, count, key) => {
             return (
-                 <View style={styles.top_emoji_row} key={key}>
-                    <Text style={{fontSize:35}}>{ emoji } </Text>
+                 <View style={styles.top_overall_row} key={key}>
+                    <Text style={{fontSize:35, color:'black'}}>{ emoji } </Text>
                     <Text style={{fontSize:24}}> - { count }</Text>
                 </View>
             )
@@ -64,12 +90,12 @@ class Summary extends Component {
         const cols = [];
         let col = [];
 
-        for (let i = 0 ; i < this.state.topEmojis.length; i++) {
+        for (let i = 0 ; i < this.state.topOverallEmojis.length; i++) {
             if (i === 4 || i === 7) {
                 cols.push(col);
                 col = [];
             }
-            const item = this.state.topEmojis[i];
+            const item = this.state.topOverallEmojis[i];
             const emoji = decodeURI(item.emoji, 'utf-8');
             const count = item.count; 
             col.push(emojiRow(emoji, count, i))
@@ -77,7 +103,7 @@ class Summary extends Component {
         cols.push(col);
 
         return (
-            <View style={styles.top_emojis}>
+            <View style={styles.top_overall}>
             {
                 cols.map( (col, i) => {
                     return (
@@ -91,8 +117,29 @@ class Summary extends Component {
         )
     }
 
+    renderTopDailyEmojis() {
+        return (
+            <View style={styles.top_daily}>
+            {
+                this.state.topDailyEmojis.map( (item, i) => {
+                    const emoji = item[0].emoji ? decodeURI(item[0].emoji, "utf-8") : "";
+                    const dayText = daysOfWeek[i];
+                    return (
+                        <View key={i} style={styles.top_daily_col}>
+                            <Text style={{fontSize:20}}>{ dayText }</Text>
+                            <Text style={{fontSize:25, color:'black'}}>{ emoji }</Text>
+                        </View>
+                    )
+                })
+            }
+            </View>
+        )
+    }
+
     render() {
-        const topEmojis = this.renderTopEmojis();
+        const topOverallEmojis = this.renderTopOverallEmojis();
+        const topDailyEmojis = this.renderTopDailyEmojis();
+
         const refreshControl = (
             <RefreshControl
                 refreshing={this.state.refreshing}
@@ -102,18 +149,39 @@ class Summary extends Component {
             <ScrollView style={styles.container}
                 showsVerticalScrollIndicator={false}
                 refreshControl={refreshControl}>
-                <View style={styles.top_emojis_header}>
-                    <Text style={styles.section_header}>Top Emojis:</Text>
-                    <Picker style={{width:140}}
-                        selectedValue={this.state.topEmojisDays}
-                        onValueChange={this.onDaysSelect}>
-                        <Picker.Item label="Last 3 days" value={3} />
-                        <Picker.Item label="Last 7 days" value={7} />
-                        <Picker.Item label="Last 14 days" value={14} />
-                        <Picker.Item label="Last 30 days" value={30} />
-                    </Picker>
+
+                <View style={styles.section}>
+                    <View style={styles.section_header}>
+                        <Text style={styles.section_header_text}>Top Overall:</Text>
+                        <Picker style={{width:140}}
+                            selectedValue={this.state.topOverallDays}
+                            onValueChange={ itemValue => this.onDaysSelect("topOverallDays", itemValue) }>
+                            <Picker.Item label="Last 3 days" value={3} />
+                            <Picker.Item label="Last 7 days" value={7} />
+                            <Picker.Item label="Last 14 days" value={14} />
+                            <Picker.Item label="Last 30 days" value={30} />
+                        </Picker>
+                    </View>
+                    { topOverallEmojis }
                 </View>
-                { topEmojis }
+
+                <View style={styles.section}>
+                    <View style={styles.section_header}>
+                        <Text style={styles.section_header_text}>
+                            Top Daily:
+                        </Text>
+                        <Picker style={{width:140}}
+                            selectedValue={this.state.topDailyDays}
+                            onValueChange={ itemValue => this.onDaysSelect("topDailyDays", itemValue)}>
+                            <Picker.Item label="Last 3 days" value={3} />
+                            <Picker.Item label="Last 7 days" value={7} />
+                            <Picker.Item label="Last 14 days" value={14} />
+                            <Picker.Item label="Last 30 days" value={30} />
+                        </Picker>
+                    </View>
+                    { topDailyEmojis }
+                </View>
+
             </ScrollView>
         );
     }
@@ -123,21 +191,36 @@ const styles = StyleSheet.create({
     container: {
         flex: 1
     },
-    section_header: {
-        fontSize: 24,
-        fontWeight: 'bold'
+    section: {
+        backgroundColor: "#EDF0DA",
+        padding: 15,
+        marginVertical: 10,
+        borderWidth: 1
     },
-    top_emojis_header: {
+    section_header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center'
     },
-    top_emojis: {
+    section_header_text: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: 'black'
+    },
+    top_overall: {
         flexDirection: 'row',
         justifyContent: 'space-around'
     },
-    top_emoji_row: {
+    top_overall_row: {
         flexDirection: 'row',
+        alignItems: 'center'
+    },
+    top_daily: {
+        flexDirection: 'row',
+        justifyContent: 'space-around'
+    },
+    top_daily_col: {
+        flexDirection: 'column',
         alignItems: 'center'
     }
 });

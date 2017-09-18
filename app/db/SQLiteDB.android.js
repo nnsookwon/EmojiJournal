@@ -87,7 +87,7 @@ class SQLiteDB {
     }
 
     // returns the top numEmojis emojis from the last numDays days
-    getTopEmojis(numEmojis, numDays) {
+    getTopEmojisOverall(numEmojis, numDays) {
         // hold query results to return 
         let execResults = null;
 
@@ -102,6 +102,35 @@ class SQLiteDB {
                             results.push(rs.rows.item(i));
                         }
                         execResults = results;
+
+
+                    }).catch( error => console.log(error))
+            })
+            .then( () => execResults )
+            .catch( error => {
+                console.log("DB access entries ERROR: " + error.message);
+                throw new Error(error);
+            })
+    }
+
+    async getTopEmojisDaily(dayOfWeek, numEmojis, numDays) {
+        // hold query results to return 
+        let execResults = null;
+
+        if (!db)
+            throw new Error("DB not open.");
+        return db.transaction( tx => {
+                const query = "SELECT strftime('%w', timestamp, 'localtime') as day_of_week, emoji, COUNT(*) as count "
+                    + "FROM JournalTable WHERE timestamp > (SELECT DATETIME('now', '-" 
+                    + numDays +" days')) AND day_of_week='" + dayOfWeek +
+                    "' GROUP BY emoji ORDER BY count desc LIMIT " + numEmojis;
+                
+                tx.executeSql(query).then( ([tx, rs]) => {
+                        let results = [];
+                        for (let i = 0; i < rs.rows.length; i++) {
+                            results.push(rs.rows.item(i));
+                        }
+                        execResults = results.length > 0 ? results : [{}];
 
                     }).catch( error => console.log(error))
             })

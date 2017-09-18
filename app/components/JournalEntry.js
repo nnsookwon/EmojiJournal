@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         marginVertical: 12,
-        borderWidth:1
+        borderWidth: 1
     },
     header: {
         flexDirection: 'row',
@@ -196,7 +196,8 @@ const styles = StyleSheet.create({
     emoji: {
         flex: 1,
         textAlign:'center',
-        fontSize: 50
+        fontSize: 50,
+        color: 'black'
     },
     info: {
         flex: 3,
