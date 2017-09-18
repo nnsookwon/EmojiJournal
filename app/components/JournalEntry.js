@@ -32,7 +32,8 @@ class JournalEntry extends Component{
             description: this.props.description
         };
 
-        this._updateEntry = this._updateEntry.bind(this);
+        this.updateEntry = this.updateEntry.bind(this);
+        this.showEditEntryModal = this.showEditEntryModal.bind(this);
         this.renderMenuOptions = this.renderMenuOptions.bind(this);
         this.renderEditEntryModal = this.renderEditEntryModal.bind(this);
     }
@@ -45,12 +46,16 @@ class JournalEntry extends Component{
         });
     }
 
-    _updateEntry() {
+    updateEntry() {
         this.props.updateEntry(this.props.entry_id,
             this.props.timestamp,
             this.state.emoji,
             this.state.description)
             .then(() => this.setState({modalVisible: false}))
+    }
+
+    showEditEntryModal() {
+        this.setState({modalVisible: true})
     }
 
     renderMenuOptions() {
@@ -68,18 +73,21 @@ class JournalEntry extends Component{
                 </MenuTrigger>
 
                 <MenuOptions>
-                    <MenuOption onSelect={() => this.setState({modalVisible: true})}>
+
+                    <MenuOption onSelect={this.showEditEntryModal}>
                         <View style={styles.icon_text}>
                             <IconFa name="pencil" size={24} />
                             <Text style={{fontSize:20}}>  Edit</Text>
                         </View>
                     </MenuOption>
+
                     <MenuOption onSelect={this.props.removeEntryById} >
                             <View style={styles.icon_text}>
                         <IconFa name="trash-o" size={24} />
                         <Text style={{fontSize:20}}>  Delete</Text>
                       </View>
                     </MenuOption>
+
                 </MenuOptions>
             </Menu>
         )
@@ -103,9 +111,10 @@ class JournalEntry extends Component{
                     style={{fontSize:18}}>
                 </TextInput>
                 <Button
-                    onPress={this._updateEntry}
+                    onPress={this.updateEntry}
                     title="Done"
-                    color="#841584"/>
+                    color="#841584"
+                    disabled={this.state.emoji===""}/>
             </View>
         )
     }
@@ -130,7 +139,7 @@ class JournalEntry extends Component{
                     { menuOptions }
                     
                 </View>
-                <TouchableHighlight onLongPress={() => console.log("press long")}>
+                <TouchableHighlight onLongPress={this.showEditEntryModal}>
                     <View style={styles.content}>
                         <Text style={styles.emoji}>
                             { decodeURI(this.props.emoji, "utf-8") }

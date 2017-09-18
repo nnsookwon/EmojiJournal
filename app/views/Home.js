@@ -54,6 +54,7 @@ class Home extends Component {
 
     changeMonth(x) {
         this.setState( (prevState) => {
+            Moment.locale('en');
             const timestamp = Moment(prevState.timestamp).add(x, 'months');
             return { timestamp }
         }, () => {
@@ -134,6 +135,7 @@ class Home extends Component {
 
     render() {
         const modalContent = this.renderAddEntryModal();
+        Moment.locale('en');
         const month = Moment(this.state.timestamp).format("MMM YYYY");
 
         return (
@@ -159,7 +161,8 @@ class Home extends Component {
                 </View>
                 
                 <ScrollView style={styles.journal_entries}
-                    showsVerticalScrollIndicator={false}>
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled">
                 {
                     this.state.entries.map( (entry, i) => {
                         return (
