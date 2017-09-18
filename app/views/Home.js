@@ -7,7 +7,8 @@ import {
     TextInput,
     Button, 
     ScrollView,
-    TouchableHighlight
+    TouchableHighlight,
+    Alert
 } from 'react-native';
 
 import Moment from 'moment';
@@ -31,6 +32,7 @@ class Home extends Component {
         };
 
         this.addEntry = this.addEntry.bind(this);
+        this.verifyEntry = this.verifyEntry.bind(this);
         this.changeMonth = this.changeMonth.bind(this);
         this.refreshEntries = this.refreshEntries.bind(this);
         this.removeEntryById = this.removeEntryById.bind(this);
@@ -60,9 +62,26 @@ class Home extends Component {
     }   
 
     addEntry() {
-        return db.addEntry(new Date().toISOString(), this.state.emoji, this.state.description)
+        return db.addEntry(new Date().toISOString(), encodeURI(this.state.emoji, "utf-8"), this.state.description)
             .then(this.refreshEntries)
             .then( () => this.setState({modalVisible: false, emoji: "", description: ""}))
+    }
+
+    verifyEntry() {
+        if (this.isEmoji(this.state.emoji)) {
+            this.addEntry();
+        }
+        else {
+            Alert.alert(
+                'Emoji not detected',
+                'The input was not recognized as an emoji. Would you like to save this entry anyway?',
+                [
+                    {text: 'No', onPress: null, style: 'cancel'},
+                    {text: 'Yes', onPress: () => this.addEntry() },
+                ],
+                { cancelable: false }
+            )
+        }
     }
 
     /** 
@@ -92,22 +111,23 @@ class Home extends Component {
     renderAddEntryModal() {
         return (
             <View>
-                <TextInput onChangeText={(emoji) => this.setState({emoji: encodeURI(emoji, "utf-8")})}
+                <TextInput onChangeText={(emoji) => this.setState({emoji})}
                     placeholder="emoji"
                     maxLength={2}
                     style={{fontSize:18}}>
                 </TextInput>
                 <TextInput onChangeText={(description) => this.setState({description})}
-                    placeholder="add notes"
+                    placeholder="notes (optional)"
                     autoCapitalize="sentences"
                     multiline={true}
                     numberOfLines={2}
                     style={{fontSize:18}}>
                 </TextInput>
                 <Button
-                    onPress={this.addEntry}
+                    onPress={this.verifyEntry}
                     title="Add"
-                    color="#841584"/>
+                    color="#841584"
+                    disabled={this.state.emoji===""}/>
             </View>
         )
     }
@@ -126,9 +146,7 @@ class Home extends Component {
                     </TouchableHighlight>
 
                     <TouchableHighlight style={styles.icon_btn}
-                        onPress={()=>this.setState({timestamp: new Date().toISOString()}, () =>{
-                            this.refreshEntries();
-                        })}
+                        onPress={()=>this.setState({timestamp: new Date().toISOString()}, ()=>this.refreshEntries())}
                         underlayColor="#E3E3E3">
                         <Text style={styles.month_text}>{month}</Text>
                     </TouchableHighlight>
