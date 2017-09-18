@@ -15,6 +15,10 @@ class SQLiteDB {
         this.close = this.close.bind(this);
         this.addEntry = this.addEntry.bind(this);
         this.getMostRecentEntries = this.getMostRecentEntries.bind(this);
+        this.getMonthlyEntries = this.getMonthlyEntries.bind(this);
+        this.getTopEmojisOverall = this.getTopEmojisOverall.bind(this);
+        this.getTopEmojisDaily = this.getTopEmojisDaily.bind(this);
+        this.updateEntry = this.updateEntry.bind(this);
         this.removeEntryById = this.removeEntryById.bind(this);
     }
 
@@ -84,6 +88,39 @@ class SQLiteDB {
                 throw new Error(error);
             })
 
+    }
+
+    getMonthlyEntries(timestamp) {
+        // hold query results to return 
+        let execResults = null;
+
+        if (!db)
+            throw new Error("DB not open.");
+
+        const date = new Date(timestamp);
+        let month = date.getMonth();
+        month = month < 9 ? "0" + (month + 1) : "" + month + 1;
+        const year = date.getFullYear();
+
+        console.log(year)
+
+        return db.transaction( tx => {
+                tx.executeSql("SELECT * FROM JournalTable WHERE strftime('%m', timestamp, 'localtime')='" + month +
+                    "' AND strftime('%Y', timestamp, 'localtime')='" + year + "' ORDER BY timestamp desc") 
+                    .then( ([tx, rs]) => {
+                        let results = [];
+                        for (let i = 0; i < rs.rows.length; i++) {
+                            results.push(rs.rows.item(i));
+                            console.log(rs.rows.item(i))
+                        }
+                        execResults = results;
+                    })
+            })
+            .then( () => execResults )
+            .catch( error => {
+                console.log("DB access entries ERROR: " + error.message);
+                throw new Error(error);
+            })
     }
 
     // returns the top numEmojis emojis from the last numDays days

@@ -6,9 +6,12 @@ import {
     View,
     TextInput,
     Button, 
-    ScrollView
+    ScrollView,
+    TouchableHighlight
 } from 'react-native';
 
+import Moment from 'moment';
+import Icon from 'react-native-vector-icons/SimpleLineIcons';
 
 import db from '../db/SQLiteDB.android';
 import JournalEntry from '../components/JournalEntry';
@@ -20,13 +23,15 @@ class Home extends Component {
         super(props);
 
         this.state = {
+            timestamp: new Date().toISOString(),
             emoji: "",
             description: "",
-            mostRecentEntries: [],
+            entries: [],
             modalVisible: false
         };
 
         this.addEntry = this.addEntry.bind(this);
+        this.changeMonth = this.changeMonth.bind(this);
         this.refreshEntries = this.refreshEntries.bind(this);
         this.removeEntryById = this.removeEntryById.bind(this);
         this.updateEntry = this.updateEntry.bind(this);
@@ -41,8 +46,17 @@ class Home extends Component {
     }
 
     refreshEntries() {
-        return db.getMostRecentEntries(100)
-            .then( mostRecentEntries => this.setState({ mostRecentEntries }) )  
+        return db.getMonthlyEntries(this.state.timestamp)
+            .then( entries => this.setState({ entries }) )  
+    }
+
+    changeMonth(x) {
+        this.setState( (prevState) => {
+            const timestamp = Moment(prevState.timestamp).add(x, 'months');
+            return { timestamp }
+        }, () => {
+            this.refreshEntries();
+        })
     }   
 
     addEntry() {
@@ -100,18 +114,36 @@ class Home extends Component {
 
     render() {
         const modalContent = this.renderAddEntryModal();
+        const month = Moment(this.state.timestamp).format("MMM YYYY");
 
         return (
             <View style={styles.container}>
-                <Button
-                    onPress={()=>this.setState({modalVisible: true})}
-                    title="Add new entry"
-                    color="#841584"
-                />
+                <View style={styles.month_nav}>
+                    <TouchableHighlight style={styles.icon_btn}
+                        onPress={()=>this.changeMonth(-1)}
+                        underlayColor="#E3E3E3">
+                        <Icon name="arrow-left" size={18} />
+                    </TouchableHighlight>
+
+                    <TouchableHighlight style={styles.icon_btn}
+                        onPress={()=>this.setState({timestamp: new Date().toISOString()}, () =>{
+                            this.refreshEntries();
+                        })}
+                        underlayColor="#E3E3E3">
+                        <Text style={styles.month_text}>{month}</Text>
+                    </TouchableHighlight>
+
+                    <TouchableHighlight style={styles.icon_btn}
+                        onPress={()=>this.changeMonth(1)}
+                        underlayColor="#E3E3E3">
+                        <Icon name="arrow-right" size={18} />
+                    </TouchableHighlight>
+                </View>
+                
                 <ScrollView style={styles.journal_entries}
                     showsVerticalScrollIndicator={false}>
                 {
-                    this.state.mostRecentEntries.map( (entry, i) => {
+                    this.state.entries.map( (entry, i) => {
                         return (
                             <JournalEntry {...entry} key={i}
                                 removeEntryById={this.removeEntryById.bind(this,entry.entry_id)}
@@ -120,6 +152,12 @@ class Home extends Component {
                     })
                 }
                 </ScrollView>
+
+                <Button
+                    onPress={()=>this.setState({modalVisible: true})}
+                    title="Add new entry"
+                    color="#841584"
+                />
 
                 {/* Display modal to add entry */}
                 <CustomModal modalVisible={this.state.modalVisible}
@@ -134,9 +172,23 @@ const styles = StyleSheet.create({
     container: {
         flex: 1
     },
+    month_nav: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    month_text: {
+        fontSize: 24,
+        color: 'black',
+        width: 140,
+        textAlign: 'center'
+    },
+    icon_btn: {
+        padding: 5
+    },
     journal_entries: {
         alignSelf: 'stretch',
-        marginTop: 10
+        marginVertical: 10
     }
 });
 
