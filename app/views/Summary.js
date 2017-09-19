@@ -160,6 +160,7 @@ class Summary extends Component {
                             <Picker.Item label="Last 7 days" value={7} />
                             <Picker.Item label="Last 14 days" value={14} />
                             <Picker.Item label="Last 30 days" value={30} />
+                            <Picker.Item label="All time" value={30000} />
                         </Picker>
                     </View>
                     { topOverallEmojis }
@@ -173,10 +174,10 @@ class Summary extends Component {
                         <Picker style={{width:140}}
                             selectedValue={this.state.topDailyDays}
                             onValueChange={ itemValue => this.onDaysSelect("topDailyDays", itemValue)}>
-                            <Picker.Item label="Last 3 days" value={3} />
                             <Picker.Item label="Last 7 days" value={7} />
                             <Picker.Item label="Last 14 days" value={14} />
                             <Picker.Item label="Last 30 days" value={30} />
+                            <Picker.Item label="All time" value={30000} />
                         </Picker>
                     </View>
                     { topDailyEmojis }

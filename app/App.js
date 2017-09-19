@@ -61,9 +61,11 @@ class App extends Component {
                     <View style={styles.pageview}>
                         <Summary />
                     </View>
+                {/*
                     <View style={styles.pageview}>
                         <Text>third page</Text>
                     </View>
+                */}
                 </ViewPagerAndroid>
                 <MenuBar index={this.state.selectedPageView}
                     setPage={this._setPage}/>

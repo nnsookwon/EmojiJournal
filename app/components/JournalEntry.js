@@ -104,7 +104,7 @@ class JournalEntry extends Component{
                 </TextInput>
                 <TextInput onChangeText={(description) => this.setState({description})}
                     value={this.state.description}
-                    placeholder="add notes"
+                    placeholder="notes (optional)"
                     autoCapitalize="sentences"
                     multiline={true}
                     numberOfLines={2}
@@ -148,8 +148,7 @@ class JournalEntry extends Component{
                             <Text style={styles.timestamp}>
                                 { timeString } 
                             </Text>
-                            <Text style={styles.description}
-                                numberOfLines={4}>
+                            <Text style={styles.description}>
                                 { this.props.description } 
                             </Text>
                         </View>

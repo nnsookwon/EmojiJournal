@@ -10,7 +10,7 @@ import {
     TouchableHighlight
 } from 'react-native';
 
-const pages = [ 'Entries', 'Summary', 'Settings' ]
+const pages = [ 'Entries', 'Summary']//, 'Settings' ]
 class MenuBar extends Component {
 
     render() {
@@ -19,12 +19,12 @@ class MenuBar extends Component {
             <View style={styles.container}>
             {
                 pages.map( (page, i) => {
-                    const style = i === this.props.index ? {fontSize:24} : {fontSize: 18};
+                    const style = i === this.props.index ? {fontSize:24, color:'white'} : {fontSize: 18, color:'white'};
                     return (
                         <TouchableHighlight key={i} 
                             onPress={()=>this.props.setPage(i)}
-                            underlayColor="white">
-                            <Text style={ style }>{page}</Text>
+                            underlayColor="#1D2D44">
+                            <Text style={style}>{page}</Text>
                         </TouchableHighlight>
                     )
                 })
@@ -38,10 +38,9 @@ class MenuBar extends Component {
 const styles = StyleSheet.create({
     container: {
         flexDirection: 'row',
-        
         justifyContent:'space-around',
         alignItems: 'center',
-        backgroundColor: 'white'
+        backgroundColor: '#1D2D44'
     }
 
 })
